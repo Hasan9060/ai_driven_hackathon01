@@ -1,43 +1,39 @@
+import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
-import type { Options as ThemeConfig } from '@docusaurus/preset-classic';
+import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Physical AI & Humanoid Robotics Lab',
   tagline: 'A Complete Guide to Building Academic Robotics Infrastructure',
   favicon: 'img/favicon.ico',
 
-  // Set the production url of your site here
   url: 'https://humanoid-robotics-textbook.netlify.app',
-  // Set the /<baseUrl>/ pathname under which your site is served
   baseUrl: '/',
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
   organizationName: 'hasanrafay',
   projectName: 'humanoid-robotics-textbook',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
-  // Even if you don't use internationalization, you can still use
-  // this field to set useful metadata like html lang. For example, if
-  // your site is Chinese, you may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
   },
 
-  
   presets: [
     [
       'classic',
       {
-        docs: false,
-        blog: false,
+        // Yahan docs ko false hi rehne dein kyunke aap niche plugin use kar rahe hain
+        docs: false, 
+        blog: {
+          showReadingTime: true,
+        },
         theme: {
           customCss: ['./src/css/custom.css'],
         },
-      } satisfies Options,
+      } satisfies Preset.Options,
     ],
   ],
 
@@ -54,12 +50,8 @@ const config: Config = {
           sidebarId: 'tutorialSidebar',
           position: 'left',
           label: 'Curriculum',
+          // Docs plugin ki ID match honi chahiye
           docsPluginId: 'tutorial',
-        },
-        {
-          type: 'custom',
-          position: 'right',
-          className: 'auth-navbar-item',
         },
         {
           href: 'https://github.com/hasanrafay/humanoid-robotics-textbook',
@@ -74,74 +66,47 @@ const config: Config = {
         {
           title: 'Resources',
           items: [
-            {
-              label: 'ROS 2 Documentation',
-              href: 'https://docs.ros.org/en/rolling/',
-            },
-            {
-              label: 'NVIDIA Isaac Sim',
-              href: 'https://developer.nvidia.com/isaac-sim',
-            },
+            { label: 'ROS 2 Documentation', href: 'https://docs.ros.org/en/rolling/' },
+            { label: 'NVIDIA Isaac Sim', href: 'https://developer.nvidia.com/isaac-sim' },
           ],
         },
         {
           title: 'Community',
           items: [
-            {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-            {
-              label: 'Twitter',
-              href: 'https://twitter.com/docusaurus',
-            },
+            { label: 'Stack Overflow', href: 'https://stackoverflow.com/questions/tagged/docusaurus' },
+            { label: 'Discord', href: 'https://discordapp.com/invite/docusaurus' },
+            { label: 'Twitter', href: 'https://twitter.com/docusaurus' },
           ],
         },
         {
           title: 'More',
           items: [
-            {
-              label: 'Blog',
-              to: '/blog',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/hasanrafay/humanoid-robotics-textbook',
-            },
+            { label: 'Blog', to: '/blog' },
+            { label: 'GitHub', href: 'https://github.com/hasanrafay/humanoid-robotics-textbook' },
           ],
         },
       ],
-      copyright: `Copyright © 2025 Hasan Rafay. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Hasan Rafay. Built with Docusaurus.`,
     },
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
-    docs: {
-      sidebar: {
-        hideable: true,
-      },
-    },
     prism: {
-      theme: require('prism-react-renderer').themes.github,
-      darkTheme: require('prism-react-renderer').themes.dracula,
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
     },
-  } satisfies ThemeConfig,
+  } satisfies Preset.ThemeConfig,
 
   plugins: [
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'tutorial',
+        id: 'tutorial', // Yeh ID navbar items mein use ho rahi hai
         path: 'docs',
-        routeBasePath: '/',
+        routeBasePath: '/', // Yeh docs ko home page bana dega
         sidebarPath: './sidebars.ts',
-        // ... other options
       },
     ],
   ],

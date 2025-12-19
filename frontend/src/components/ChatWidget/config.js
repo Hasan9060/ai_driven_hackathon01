@@ -8,7 +8,7 @@
 // API Configuration
 export const API_CONFIG = {
   // Backend API URL - change this to match your backend server
-  baseUrl: 'http://localhost:8000',
+  baseUrl: 'https://hasansadf-ai-driven-book.hf.space',
 
   // Request timeout in milliseconds
   timeout: 30000,
