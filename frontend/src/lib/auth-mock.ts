@@ -39,6 +39,9 @@ const mockUsers: User[] = [
   },
 ];
 
+// Helper to check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+
 export const authClient = {
   // Mock signIn function
   signIn: {
@@ -66,8 +69,10 @@ export const authClient = {
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       };
 
-      // Store in localStorage
-      localStorage.setItem("auth-session", JSON.stringify(currentSession));
+      // Store in localStorage (only if in browser)
+      if (isBrowser) {
+        localStorage.setItem("auth-session", JSON.stringify(currentSession));
+      }
 
       return {
         data: { user, token: currentSession.token }
@@ -121,7 +126,9 @@ export const authClient = {
   // Mock signOut function
   signOut: async (): Promise<void> => {
     currentSession = null;
-    localStorage.removeItem("auth-session");
+    if (isBrowser) {
+      localStorage.removeItem("auth-session");
+    }
   },
 
   // Hook to get session
@@ -131,19 +138,21 @@ export const authClient = {
     const getSession = (): Session | null => {
       if (currentSession) return currentSession;
 
-      // Try to restore from localStorage
-      const stored = localStorage.getItem("auth-session");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (new Date(parsed.expiresAt) > new Date()) {
-            currentSession = parsed;
-            return currentSession;
-          } else {
+      // Try to restore from localStorage (only if in browser)
+      if (isBrowser) {
+        const stored = localStorage.getItem("auth-session");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (new Date(parsed.expiresAt) > new Date()) {
+              currentSession = parsed;
+              return currentSession;
+            } else {
+              localStorage.removeItem("auth-session");
+            }
+          } catch (e) {
             localStorage.removeItem("auth-session");
           }
-        } catch (e) {
-          localStorage.removeItem("auth-session");
         }
       }
 

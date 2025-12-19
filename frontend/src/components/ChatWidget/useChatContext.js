@@ -2,14 +2,22 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { CONFIG } from './config';
 
+// Helper to check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+
 const generateSessionId = () => {
   // Try to get existing session from localStorage or generate new one
-  const existing = localStorage.getItem('chat_session_id');
-  if (existing) return existing;
+  if (isBrowser) {
+    const existing = localStorage.getItem('chat_session_id');
+    if (existing) return existing;
 
-  const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  localStorage.setItem('chat_session_id', newSessionId);
-  return newSessionId;
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('chat_session_id', newSessionId);
+    return newSessionId;
+  }
+
+  // Fallback for server-side
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
 const createMessage = (content, type, sources = null, confidence = null, responseTime = null) => {
@@ -33,6 +41,8 @@ export const useChatContext = () => {
 
   // Load messages from localStorage on mount
   useEffect(() => {
+    if (!isBrowser) return; // Skip on server-side
+
     try {
       const savedMessages = localStorage.getItem(`chat_messages_${sessionInfo.sessionId}`);
       if (savedMessages) {
@@ -46,6 +56,8 @@ export const useChatContext = () => {
 
   // Save messages to localStorage when they change
   useEffect(() => {
+    if (!isBrowser) return; // Skip on server-side
+
     if (messages.length > 0) {
       try {
         const messagesToSave = messages.slice(-CONFIG.maxMessageHistory);
@@ -122,7 +134,9 @@ export const useChatContext = () => {
       // Update session info if provided
       if (data.session_id && data.session_id !== sessionInfo.sessionId) {
         setSessionInfo(prev => ({ ...prev, sessionId: data.session_id }));
-        localStorage.setItem('chat_session_id', data.session_id);
+        if (isBrowser) {
+          localStorage.setItem('chat_session_id', data.session_id);
+        }
       }
 
       return data;
@@ -165,11 +179,13 @@ export const useChatContext = () => {
       setSessionInfo({ sessionId: newSessionId });
 
       // Clear localStorage
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('chat_messages_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      if (isBrowser) {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('chat_messages_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
 
     } catch (error) {
       console.error('Failed to clear history:', error);
