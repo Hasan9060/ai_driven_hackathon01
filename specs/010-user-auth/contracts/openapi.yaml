@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: Auth System API
+  description: API endpoints for authentication and profile management
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /webhooks/auth:
+    post:
+      summary: Receive auth events from Better-Auth
+      operationId: authWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthEvent'
+      responses:
+        '200':
+          description: Event processed successfully
+        '400':
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+
+  /auth/validate:
+    get:
+      summary: Validate session token
+      operationId: validateSession
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Valid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionValidation'
+        '401':
+          description: Invalid or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /profiles/me:
+    get:
+      summary: Get current user's profile
+      operationId: getMyProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Profile not found
+
+    put:
+      summary: Update current user's profile
+      operationId: updateMyProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+
+  /profiles/me/questionnaire:
+    post:
+      summary: Submit technical background questionnaire
+      operationId: submitQuestionnaire
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionnaireSubmission'
+      responses:
+        '201':
+          description: Questionnaire submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Validation error
+
+  /auth/password-reset:
+    post:
+      summary: Request password reset
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset email sent
+        '404':
+          description: Email not found
+        '429':
+          description: Too many requests
+
+    put:
+      summary: Reset password with token
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          description: Invalid or expired token
+
+components:
+  schemas:
+    AuthEvent:
+      type: object
+      required:
+        - event
+        - userId
+        - email
+      properties:
+        event:
+          type: string
+          enum:
+            - user.created
+            - user.verified
+            - auth.login
+            - auth.logout
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        timestamp:
+          type: string
+          format: date-time
+        ipAddress:
+          type: string
+          format: ipv4
+        userAgent:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+
+    SessionValidation:
+      type: object
+      required:
+        - valid
+        - userId
+      properties:
+        valid:
+          type: boolean
+        userId:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        email:
+          type: string
+          format: email
+
+    Profile:
+      type: object
+      required:
+        - userId
+        - email
+        - softwareExperience
+        - hardwareExperience
+      properties:
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        softwareExperience:
+          $ref: '#/components/schemas/SoftwareExperience'
+        hardwareExperience:
+          $ref: '#/components/schemas/HardwareExperience'
+        experienceLevel:
+          type: string
+          enum:
+            - beginner
+            - intermediate
+            - advanced
+            - expert
+        interests:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SoftwareExperience:
+      type: object
+      properties:
+        years:
+          type: integer
+          minimum: 0
+          maximum: 50
+        languages:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+        frameworks:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+
+    HardwareExperience:
+      type: object
+      properties:
+        robotics:
+          type: boolean
+        embedded:
+          type: boolean
+        iot:
+          type: boolean
+
+    ProfileUpdate:
+      type: object
+      properties:
+        softwareExperience:
+          $ref: '#/components/schemas/SoftwareExperience'
+        hardwareExperience:
+          $ref: '#/components/schemas/HardwareExperience'
+        interests:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+
+    QuestionnaireSubmission:
+      type: object
+      required:
+        - softwareExperience
+        - hardwareExperience
+      properties:
+        softwareExperience:
+          $ref: '#/components/schemas/SoftwareExperience'
+        hardwareExperience:
+          $ref: '#/components/schemas/HardwareExperience'
+        interests:
+          type: array
+          items:
+            type: string
+            enum:
+              - web-development
+              - mobile-development
+              - machine-learning
+              - robotics
+              - cloud-computing
+              - devops
+              - cybersecurity
+              - data-science
+              - embedded-systems
+              - iot
+              - game-development
+              - blockchain
+          maxItems: 5
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

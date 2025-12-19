@@ -1,0 +1,7 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#f0f0f0"/>
+  <rect x="90" y="120" width="20" height="60" fill="#92400e"/>
+  <polygon points="100,40 60,100 140,100" fill="#10b981"/>
+  <polygon points="100,70 70,120 130,120" fill="#059669"/>
+  <text x="100" y="180" font-family="Arial" font-size="14" fill="#374151" text-anchor="middle">Tree</text>
+</svg>

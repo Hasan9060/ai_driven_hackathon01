@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(.bash .specify/scripts/bash/create-new-feature.sh --json \"/sp.specify Technical Book: Building the Physical AI & Humanoid Robotics Lab\n\nTarget audience: Academic leaders, Robotics Program Directors, and technical professionals responsible for planning and procuring infrastructure for embodied AI courses.\n\nFocus: A detailed technical architecture and procurement guide for setting up the \"\"Physical AI & Humanoid Robotics\"\" curriculum. The primary goal is to translate the course structure and hardware requirements into a deployable, cost-justified lab setup, focusing on the integration of ROS 2, NVIDIA Isaac Sim, and VLA models.\n\nSuccess criteria:\n\nBook must be structured precisely according to the 13-week Weekly Breakdown provided in the source material, ensuring a chapter for each key module (ROS 2, Gazebo, Isaac, Humanoid Development, Conversational Robotics).\n\nAccurately describe the function and necessity of the three core infrastructure components: Digital Twin Workstation (RTX GPU), Edge AI Kit (Jetson Orin), and Robot Lab (Unitree options).\n\nProvide a feature-by-feature comparison and cost justification for the \"\"On-Premise Lab\"\" versus the \"\"Cloud-Native Lab\"\" (High OpEx) options, including the \"\"Latency Trap\"\" analysis.\n\nClearly explain the \"\"Sim-to-Real\"\" transfer concept and its dependence on high-VRAM RTX hardware.\n\nGenerate MDX content for Docusaurus, including frontmatter for all chapters and necessary sidebar structure definitions (inferred from the weekly breakdown).\n\nConstraints:\n\nContent Length: Approximately 5,000 - 9,000 words in total.\n\nFormat: Docusaurus MDX, organized under a /docs directory structure.\n\nMust include detailed tables for the \"\"Summary of Architecture\"\" and \"\"Economy Jetson Student Kit\"\" sections.\n\nTone: Highly informative, architectural, and procurement-focused, written for a technical leadership audience.\n\nMust ensure all product names (ROS 2, Gazebo, NVIDIA Isaac Sim, Unitree, RealSense, Whisper) are used accurately and contextually.\n\nNot building:\n\nActual executable ROS 2/Python code packages (focus is on the architecture/infrastructure description, not the implementation).\n\nEthical, philosophical, or future-gazing discussions about AI and robotics (purely technical infrastructure planning).\n\nContent that deviates from the provided 13-week course structure.\" --number 1 --short-name \"robotics-lab-guide\")",
+      "Bash(bash:*)",
+      "Bash(npm run build)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(npm start)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(.specify/scripts/bash/create-phr.sh:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh claude)",
+      "Bash(/mnt/d/Hackathon/humanoid-robotics-textbook/.specify/scripts/bash/create-phr.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

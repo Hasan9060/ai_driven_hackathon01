@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(python:*)",
+      "Bash(python3 scripts/ingest.py:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(rm:*)",
+      "Bash(pip install:*)",
+      "Bash(sudo apt update:*)",
+      "Bash(sudo apt install:*)"
+    ]
+  }
+}

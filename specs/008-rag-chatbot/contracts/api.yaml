@@ -1,0 +1,637 @@
+openapi: 3.0.3
+info:
+  title: RAG Chatbot API
+  description: API for contextual Q&A on Humanoid Robotics Textbook
+  version: 1.0.0
+  contact:
+    name: RAG Chatbot Team
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+paths:
+  /chat:
+    post:
+      summary: Ask a question about the book
+      description: |
+        Submit a question to the RAG chatbot.
+        Can optionally include selected text for focused analysis.
+        Responses include source citations from the book.
+      operationId: chatQuery
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              generalQuery:
+                summary: General book query
+                value:
+                  question: "What are the key challenges in bipedal locomotion?"
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+              selectedTextQuery:
+                summary: Query with selected text
+                value:
+                  question: "Can you explain this equation in simpler terms?"
+                  selected_text: "τ = Iα + dω/dt"
+                  selected_text_source:
+                    url: "https://example.com/chapter3/dynamics"
+                    chapter: 3
+                    section: "Dynamics"
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                generalAnswer:
+                  summary: Answer with citations
+                  value:
+                    answer: "Bipedal locomotion faces several key challenges including maintaining balance, adapting to uneven terrain, and efficient energy usage..."
+                    sources:
+                      - chapter: 5
+                        section: "Bipedal Locomotion"
+                        page: 127
+                        relevance_score: 0.95
+                        snippet: "The primary challenges in bipedal locomotion stem from..."
+                        url: "https://example.com/chapter5/locomotion"
+                    session_id: "550e8400-e29b-41d4-a716-446655440000"
+                    message_id: "msg_12345"
+                    response_time_ms: 1247
+                selectedTextAnswer:
+                  summary: Focused analysis on selected text
+                  value:
+                    answer: "This equation represents the torque (τ) required for rotational motion, where I is the moment of inertia and α is angular acceleration..."
+                    sources:
+                      - chapter: 3
+                        section: "Dynamics"
+                        page: 89
+                        relevance_score: 1.0
+                        snippet: "τ = Iα + dω/dt"
+                        selected_text: true
+                        url: "https://example.com/chapter3/dynamics"
+                    session_id: "550e8400-e29b-41d4-a716-446655440000"
+                    message_id: "msg_12346"
+                    response_time_ms: 892
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /chat/history:
+    get:
+      summary: Retrieve chat history
+      description: Get the conversation history for a specific session
+      operationId: getChatHistory
+      tags:
+        - Chat
+      parameters:
+        - name: session_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session identifier
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: Number of messages to retrieve
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Number of messages to skip
+      responses:
+        '200':
+          description: Chat history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sessions:
+    post:
+      summary: Create new chat session
+      description: Initialize a new chat session with optional configuration
+      operationId: createSession
+      tags:
+        - Sessions
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /sessions/{session_id}:
+    get:
+      summary: Get session details
+      description: Retrieve information about a specific session
+      operationId: getSession
+      tags:
+        - Sessions
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /health:
+    get:
+      summary: Health check
+      description: Verify API health and dependencies
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /feedback:
+    post:
+      summary: Submit feedback
+      description: Provide feedback on chatbot responses
+      operationId: submitFeedback
+      tags:
+        - Feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '201':
+          description: Feedback submitted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - question
+        - session_id
+      properties:
+        question:
+          type: string
+          description: User's question
+          minLength: 1
+          maxLength: 1000
+          example: "What is inverse kinematics?"
+        selected_text:
+          type: string
+          description: Optional text selected by user for focused analysis
+          maxLength: 2000
+          example: "The Jacobian matrix relates joint velocities to end-effector velocities"
+        selected_text_source:
+          $ref: '#/components/schemas/TextSource'
+        session_id:
+          type: string
+          format: uuid
+          description: Session identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        context:
+          type: object
+          description: Additional context for the query
+          properties:
+            technical_level:
+              $ref: '#/components/schemas/TechnicalLevel'
+            focus_areas:
+              type: array
+              items:
+                $ref: '#/components/schemas/RoboticsDomain'
+
+    ChatResponse:
+      type: object
+      required:
+        - answer
+        - session_id
+        - message_id
+      properties:
+        answer:
+          type: string
+          description: Chatbot's answer
+          example: "Inverse kinematics is the process of calculating joint angles needed to achieve a desired end-effector position..."
+        sources:
+          type: array
+          description: Source citations used in answer
+          items:
+            $ref: '#/components/schemas/Source'
+        session_id:
+          type: string
+          format: uuid
+          description: Session identifier
+        message_id:
+          type: string
+          description: Unique message identifier
+        response_time_ms:
+          type: integer
+          description: Time taken to generate response
+          example: 1247
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence in the answer
+        followup_suggestions:
+          type: array
+          description: Suggested follow-up questions
+          items:
+            type: string
+          example: ["How does this differ from forward kinematics?", "Can you show an example?"]
+
+    Source:
+      type: object
+      required:
+        - chapter
+        - url
+        - relevance_score
+      properties:
+        chapter:
+          type: integer
+          description: Chapter number
+          example: 4
+        section:
+          type: string
+          description: Section title
+          example: "Kinematics Fundamentals"
+        page:
+          type: integer
+          description: Page number
+          example: 93
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Relevance to query
+          example: 0.95
+        snippet:
+          type: string
+          description: Relevant text snippet
+          example: "The Jacobian matrix is a fundamental concept in robotics..."
+        url:
+          type: string
+          format: uri
+          description: Source URL
+          example: "https://example.com/chapter4/kinematics"
+        selected_text:
+          type: boolean
+          description: Whether this is user-selected text
+          default: false
+
+    TextSource:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL where text was selected
+        chapter:
+          type: integer
+          description: Chapter number
+        section:
+          type: string
+          description: Section title
+        page:
+          type: integer
+          description: Page number
+        position:
+          type: object
+          description: Text position information
+          properties:
+            start_offset:
+              type: integer
+            end_offset:
+              type: integer
+
+    ChatHistoryResponse:
+      type: object
+      required:
+        - messages
+        - session_id
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        session_id:
+          type: string
+          format: uuid
+        total_count:
+          type: integer
+          description: Total messages in session
+        has_more:
+          type: boolean
+          description: Whether more messages available
+
+    ChatMessage:
+      type: object
+      required:
+        - message_id
+        - message_type
+        - content
+        - timestamp
+      properties:
+        message_id:
+          type: string
+          description: Unique message identifier
+        message_type:
+          $ref: '#/components/schemas/MessageType'
+        content:
+          type: string
+          description: Message content
+        timestamp:
+          type: string
+          format: date-time
+          description: Message timestamp
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+        feedback:
+          $ref: '#/components/schemas/Feedback'
+
+    CreateSessionRequest:
+      type: object
+      properties:
+        user_identifier:
+          type: string
+          description: Optional user identifier
+        language_preference:
+          type: string
+          default: "en"
+          example: "en"
+        technical_level:
+          $ref: '#/components/schemas/TechnicalLevel'
+        privacy_consent:
+          type: boolean
+          description: User consent for data processing
+
+    SessionResponse:
+      type: object
+      required:
+        - session_id
+        - created_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Session identifier
+        created_at:
+          type: string
+          format: date-time
+          description: Session creation time
+        last_activity:
+          type: string
+          format: date-time
+          description: Last activity time
+        message_count:
+          type: integer
+          description: Number of messages in session
+        expires_at:
+          type: string
+          format: date-time
+          description: Session expiration time
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall system health
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp
+        services:
+          type: object
+          description: Individual service health
+          properties:
+            database:
+              $ref: '#/components/schemas/ServiceHealth'
+            vector_db:
+              $ref: '#/components/schemas/ServiceHealth'
+            llm_service:
+              $ref: '#/components/schemas/ServiceHealth'
+
+    ServiceHealth:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        response_time_ms:
+          type: integer
+          description: Service response time
+        last_check:
+          type: string
+          format: date-time
+        error_message:
+          type: string
+          description: Error if unhealthy
+
+    FeedbackRequest:
+      type: object
+      required:
+        - message_id
+        - rating
+      properties:
+        message_id:
+          type: string
+          description: Message being rated
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Rating from 1 to 5
+        comment:
+          type: string
+          description: Optional feedback comment
+          maxLength: 1000
+
+    Feedback:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    MessageType:
+      type: string
+      enum:
+        - QUESTION
+        - ANSWER
+        - SYSTEM
+
+    TechnicalLevel:
+      type: string
+      enum:
+        - BEGINNER
+        - INTERMEDIATE
+        - ADVANCED
+      description: User's technical knowledge level
+
+    RoboticsDomain:
+      type: string
+      enum:
+        - KINEMATICS
+        - DYNAMICS
+        - CONTROL
+        - SENSING
+        - LOCOMOTION
+        - MANIPULATION
+        - AI_ML
+        - HARDWARE
+      description: Specific area of robotics
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              description: Additional error details
+            request_id:
+              type: string
+              description: Request identifier for debugging
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: BAD_REQUEST
+              message: "Invalid session_id format"
+              request_id: "req_12345"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: NOT_FOUND
+              message: "Session not found"
+              request_id: "req_12346"
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: "Too many requests. Please try again later."
+              details:
+                retry_after: 60
+              request_id: "req_12347"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: INTERNAL_ERROR
+              message: "An unexpected error occurred"
+              request_id: "req_12348"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+security:
+  - BearerAuth: []
