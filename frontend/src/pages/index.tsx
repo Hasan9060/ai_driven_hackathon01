@@ -26,7 +26,7 @@ function HomepageHeader() {
               </Link>
               <Link
                 className="button button--secondary button--lg"
-                to="/99-hardware/workstation-spec">
+                to="/hardware/workstation-spec">
                 Hardware Requirements
               </Link>
             </div>
