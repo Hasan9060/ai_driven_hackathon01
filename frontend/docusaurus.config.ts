@@ -54,6 +54,16 @@ const config: Config = {
           docsPluginId: 'tutorial',
         },
         {
+          to: '/signin',
+          label: 'Login',
+          position: 'right',
+        },
+        {
+          to: '/signup',
+          label: 'Sign Up',
+          position: 'right',
+        },
+        {
           href: 'https://github.com/hasanrafay/humanoid-robotics-textbook',
           label: 'GitHub',
           position: 'right',
